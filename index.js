@@ -13,10 +13,14 @@ app.use(cors());
 
 
 // Swagger documentation route
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: "Squad-8 Project API Documentation"
-}));
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpecs, {
+    customCss: ".swagger-ui .topbar { display: none }",
+    customSiteTitle: "Squad-8 Project API Documentation",
+  })
+);
 
 connectDB();
 
@@ -31,9 +35,14 @@ app.use('/api/account', require("./routes/account"));
 //server handler
 PORT = process.env.PORT || 5000;
 
+// Register audit event listeners
+require("./listeners/auditLoginListener");
+
 const server = app.listen(PORT, () => {
   console.log("app listening on port", PORT);
-  console.log(`Swagger documentation available at: http://localhost:${PORT}/api-docs`);
+  console.log(
+    `Swagger documentation available at: http://localhost:${PORT}/api-docs`
+  );
   //console.log("app listning on port", PORT);
   logger.info(`Server running on port ${PORT}`);
 });
@@ -41,7 +50,7 @@ const server = app.listen(PORT, () => {
 //utils
 app.use((err, req, res, next) => {
   logger.error(err);
-  res.status(500).json({ error: 'Internal server error' });
+  res.status(500).json({ error: "Internal server error" });
 });
 
 process.on("uncaughtException", (err) => {
