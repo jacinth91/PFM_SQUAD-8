@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const AccountDetailSchema = new Schema({
   idUserLoginDetail: {
     type: Schema.Types.ObjectId,
-    ref: 'UserLoginDetail',
+    ref: 'User',
     required: true
   },
   credit: {
@@ -31,7 +31,6 @@ const AccountDetailSchema = new Schema({
   createdBy: {
     type: Schema.Types.ObjectId,
     ref: 'UserLoginDetail',
-    required: true
   }
 });
 
