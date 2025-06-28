@@ -35,21 +35,6 @@ function handleUserLoginEvent(eventType, data) {
       loginDateTime: data.loginDateTime || new Date(),
       error: data.error,
     };
-  } else if (eventType === "user:register") {
-    jobData = {
-      ...jobData,
-      idUserLoginDetail: data.idUserLoginDetail,
-      loginStatus: "REGISTERED",
-      loginDateTime: data.loginDateTime || new Date(),
-    };
-  } else if (eventType === "user:register:failure") {
-    jobData = {
-      ...jobData,
-      idUserLoginDetail: data.idUserLoginDetail,
-      loginStatus: "REGISTER_FAILED",
-      loginDateTime: data.loginDateTime || new Date(),
-      error: data.error,
-    };
   } else if (eventType === "user:logout") {
     jobData = {
       ...jobData,
@@ -95,36 +80,12 @@ auditUserEvents.on("user:logout", (data) => {
   handleUserLoginEvent("user:logout", data);
 });
 
-auditUserEvents.on("user:register", (data) => {
-  if (!data.idUserLoginDetail || !data.sessionId) {
-    console.error(
-      "❌ Missing idUserLoginDetail or sessionId in register event data"
-    );
-    return;
-  }
-  handleUserLoginEvent("user:register", data);
-});
-
-auditUserEvents.on("user:register:failure", (data) => {
-  // idUserLoginDetail may be null on failure
-  if (!data.sessionId) {
-    console.error("❌ Missing sessionId in register failure event data");
-    return;
-  }
-  handleUserLoginEvent("user:register:failure", data);
-});
-
 // Worker: Process jobs and write to DB
 const auditLogWorker = new Worker(
   "audit-log-queue",
   async (job) => {
     console.log(`[Worker] Processing job: ${job.name}`, job.data);
-    if (
-      job.name === "user:login" ||
-      job.name === "user:login:failure" ||
-      job.name === "user:register" ||
-      job.name === "user:register:failure"
-    ) {
+    if (job.name === "user:login" || job.name === "user:login:failure") {
       const {
         idUserLoginDetail,
         sessionId,
