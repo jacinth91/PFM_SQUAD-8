@@ -39,7 +39,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-/*process.on("unhandledRejection", (err, promise) => {
-  console.log("Logged error:", err);
-  server.close(() => process.exit(1));
-});*/
+process.on("uncaughtException", (err) => {
+  logger.error("Uncaught Exception:", err);
+  // Optionally notify admin or restart logic
+});
