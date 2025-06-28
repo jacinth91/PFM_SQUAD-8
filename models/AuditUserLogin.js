@@ -1,5 +1,5 @@
 // models/AuditUserLogin.js
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const { Schema, model } = mongoose;
 
@@ -39,4 +39,4 @@ const auditUserLoginSchema = new Schema(
 auditUserLoginSchema.index({ sessionId: 1 });
 
 const AuditUserLogin = model("AuditUserLogin", auditUserLoginSchema);
-export default AuditUserLogin;
+module.exports = AuditUserLogin;
