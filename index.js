@@ -22,6 +22,7 @@ connectDB();
 
 app.use("/api/private", require("./routes/private"));
 app.use("/api/auth", require("./routes/auth"));
+app.use("/api/products", require("./routes/products"));
 
 //server handler
 PORT = process.env.PORT || 5000;
