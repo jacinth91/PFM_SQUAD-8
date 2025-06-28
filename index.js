@@ -58,3 +58,4 @@ process.on("uncaughtException", (err) => {
 
 
 //MONGO_URI=mongodb://mongo:vQeXFkmmssMpSaclpbiKMRrvxjNJviKi@interchange.proxy.rlwy.net:21290
+//mongodb://mongo1:27017,mongo2:27017,mongo3:27017/portfolio?replicaSet=rs0

@@ -12,21 +12,21 @@ exports.buyShares = async (req, res) => {
   try {
     const { productId, shares } = req.body;
 
-    const user = await AccountDetail.findById(userOne._id).session(session);
-    
+    console.log(userOne);
+    const user = await AccountDetail.findOne({ idUserLoginDetail: userOne._id }).session(session);
     const product = await Product.findById(productId).session(session);
     if (!product || product.quantity < shares) {
         throw new Error("Not enough shares available");
     }
-    if (!user || (user.balance < shares*product.sharePrice)) {
+    if (!user || (user.runningBalance > shares*product.sharePrice)) {
       throw new Error("Insufficient balance or user not found");
     }
 
-    user.balance -= cost*product.pricePerShare;
+    user.runningBalance -= shares*product.pricePerShare;
     await user.save({ session });
 
     product.availableShares -= shares;
-    await Product.save({ session });
+    await product.save({ session });
 
    //commit transaction
     await session.commitTransaction();
