@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  mongo1:
+    image: mongo:6
+    container_name: mongo1
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data/mongo1:/data/db
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+
+  mongo2:
+    image: mongo:6
+    container_name: mongo2
+    ports:
+      - 27018:27017
+    volumes:
+      - ./data/mongo2:/data/db
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+
+  mongo3:
+    image: mongo:6
+    container_name: mongo3
+    ports:
+      - 27019:27017
+    volumes:
+      - ./data/mongo3:/data/db
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+
+  app:
+    build: .
+    container_name: squad8-app
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URI=mongodb://mongo1:27017,mongo2:27017,mongo3:27017/portfolio?replicaSet=rs0
+      - JWT_SECRET=your-secret
+    depends_on:
+      - mongo1
+      - mongo2
+      - mongo3

@@ -44,3 +44,17 @@ const server = app.listen(PORT, () => {
   //console.log("app listning on port", PORT);
   logger.info(`Server running on port ${PORT}`);
 });
+
+//utils
+app.use((err, req, res, next) => {
+  logger.error(err);
+  res.status(500).json({ error: "Internal server error" });
+});
+
+process.on("uncaughtException", (err) => {
+  logger.error("Uncaught Exception:", err);
+  // Optionally notify admin or restart logic
+});
+
+
+//MONGO_URI=mongodb://mongo:vQeXFkmmssMpSaclpbiKMRrvxjNJviKi@interchange.proxy.rlwy.net:21290
