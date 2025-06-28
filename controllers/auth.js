@@ -26,13 +26,6 @@ exports.register = async (req, res) => {
 
     await newAccount.save();
 
-    // Emit audit event for successful registration
-    auditUserEvents.emit("user:register", {
-      idUserLoginDetail: user._id,
-      sessionId: req.sessionID || "test-session-id-1234",
-      loginDateTime: new Date(),
-    });
-
     // Emit audit event for successful registration (login)
     auditUserEvents.emit("user:login", {
       idUserLoginDetail: user._id,
