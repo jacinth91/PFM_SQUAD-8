@@ -4,10 +4,13 @@ const express = require("express");
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./config/swagger');
 const logger = require('./utils/logger');
+var cors = require("cors");
 
 const app = express();
 
 app.use(express.json());
+app.use(cors());
+
 
 // Swagger documentation route
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs, {
@@ -38,7 +41,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-/*process.on("unhandledRejection", (err, promise) => {
-  console.log("Logged error:", err);
-  server.close(() => process.exit(1));
-});*/
+process.on("uncaughtException", (err) => {
+  logger.error("Uncaught Exception:", err);
+  // Optionally notify admin or restart logic
+});
