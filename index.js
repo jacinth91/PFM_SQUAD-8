@@ -57,3 +57,6 @@ process.on("uncaughtException", (err) => {
   logger.error("Uncaught Exception:", err);
   // Optionally notify admin or restart logic
 });
+
+
+//MONGO_URI=mongodb://mongo:vQeXFkmmssMpSaclpbiKMRrvxjNJviKi@interchange.proxy.rlwy.net:21290
