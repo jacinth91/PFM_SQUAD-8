@@ -1,5 +1,6 @@
 const { User } = require("../models/User");
 const logger = require('../utils/logger');
+const { AccountDetail } = require('../models/AccountDetail');
 
 exports.register = async (req, res) => {
   try {
@@ -12,6 +13,17 @@ exports.register = async (req, res) => {
           EMAIL_ADDRESS,
           password
         });
+
+    // Add user information in account details
+    const userId = user._id;
+    const newAccount = new AccountDetail({
+        idUserLoginDetail: userId,
+        credit: 5000,
+        debit: 0,
+        createdBy: userId
+    });
+
+    await newAccount.save();
 
     sendToken(user, 201, res);
   } catch (error) {
@@ -28,6 +40,15 @@ exports.login = async (req, res, next) => {
   logger.info('login user into database...');
   try {
     const { EMAIL_ADDRESS, password } = req.body;
+
+    const newAccount = new AccountDetail({
+      idUserLoginDetail: '665b83c4e78b6dd832a1e12f',
+      credit: 5000,
+      debit: 0,
+      createdBy: '665b83c4e78b6dd832a1e12f'
+    });
+
+    await newAccount.save();
   
     if (!EMAIL_ADDRESS || !password) {
       logger.error('registration failed', "please provide email and password");

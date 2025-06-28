@@ -23,6 +23,7 @@ connectDB();
 app.use("/api/private", require("./routes/private"));
 app.use("/api/auth", require("./routes/auth"));
 app.use('/api/orders', require("./routes/orders"));
+app.use('/api/account', require("./routes/account"));
 
 
 //server handler
