@@ -1,16 +1,15 @@
 require("dotenv").config({ path: ".env" });
 const connectDB = require("./config/db");
 const express = require("express");
-const swaggerUi = require('swagger-ui-express');
-const swaggerSpecs = require('./config/swagger');
-const logger = require('./utils/logger');
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpecs = require("./config/swagger");
+const logger = require("./utils/logger");
 var cors = require("cors");
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
-
 
 // Swagger documentation route
 app.use(
@@ -28,9 +27,8 @@ app.use("/api/private", require("./routes/private"));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/products", require("./routes/products"));
 app.use("/api/transaction", require("./routes/transaction"));
-app.use('/api/orders', require("./routes/orders"));
-app.use('/api/account', require("./routes/account"));
-
+app.use("/api/orders", require("./routes/orders"));
+app.use("/api/account", require("./routes/account"));
 
 //server handler
 PORT = process.env.PORT || 5000;

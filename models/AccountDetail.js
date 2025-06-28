@@ -30,7 +30,8 @@ const AccountDetailSchema = new Schema({
   },
   createdBy: {
     type: Schema.Types.ObjectId,
-    ref: 'UserLoginDetail',
+    ref: 'User',
+    required: true
   }
 });
 
