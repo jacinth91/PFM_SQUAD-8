@@ -21,6 +21,41 @@ exports.register = async (req, res) => {
   }
 };
 
+exports.login = async (req, res, next) => {
+  const { EMAIL_ADDRESS, password } = req.body;
+
+  if (!EMAIL_ADDRESS || !password) {
+    return res
+      .status(400)
+      .json({ success: false, error: "please provide email and password" });
+  }
+
+  try {
+    const user = await User.findOne({ EMAIL_ADDRESS }).select("+password");
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, error: "invalid credentials" });
+    }
+
+    const isMatch = await user.matchPasswords(password);
+
+    if (!isMatch) {
+      return res
+        .status(404)
+        .json({ success: false, error: "invalid credentials" });
+    }
+
+    sendToken(user, 200, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
 const sendToken = (user, statusCode, res) => {
   const token = user.getSignToken();
   user.password = null;
