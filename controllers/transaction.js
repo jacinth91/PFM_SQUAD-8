@@ -4,7 +4,7 @@ const { Product } = require("../models/Product");
 const logger = require("../utils/logger");
 
 exports.buyShares = async (req, res) => {
-  let user = req.user;
+  let userOne = req.user;
 
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -12,27 +12,27 @@ exports.buyShares = async (req, res) => {
   try {
     const { productId, shares } = req.body;
 
-    const user = await AccountDetail.findById(user._id).session(session);
+    const user = await AccountDetail.findById(userOne._id).session(session);
     
     const product = await Product.findById(productId).session(session);
-    if (!product || product.availableShares < shares) {
+    if (!product || product.quantity < shares) {
         throw new Error("Not enough shares available");
     }
-    if (!user || (user.balance < shares*Product.sharePrice)) {
+    if (!user || (user.balance < shares*product.sharePrice)) {
       throw new Error("Insufficient balance or user not found");
     }
 
-    user.balance -= cost*Product.sharePrice;
+    user.balance -= cost*product.pricePerShare;
     await user.save({ session });
 
     product.availableShares -= shares;
-    await product.save({ session });
+    await Product.save({ session });
 
    //commit transaction
     await session.commitTransaction();
     session.endSession();
 
-    logger.info(`booked for user ${userId}: ${shares} shares from ${productId}`);
+    logger.info(`bought for user ${user._id}: ${shares} shares from ${productId}`);
     res.status(200).json({ success: true, message: "Trade booked successfully" });
 
   } catch (err) {
