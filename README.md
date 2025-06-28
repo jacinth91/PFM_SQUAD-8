@@ -170,3 +170,5 @@ npm run dev
 ## License
 
 ISC 
+
+docker-compose up --build
