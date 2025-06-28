@@ -21,6 +21,35 @@ exports.create = async (req, res) => {
   }
 };
 
+exports.get = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+        logger.error('Validation failed', "Invalid user id!");
+        return res
+        .status(400)
+        .json({ success: false, error: "Invalid user id!" });
+    }
+
+    const accountDetails = await AccountDetail.find({ idUserLoginDetail: userId })
+        .populate('idUserLoginDetail', 'EMAIL_ADDRESS FIRST_NAME LAST_NAME')
+        .populate('idOrderDetail');
+
+    if (!accountDetails || accountDetails.length === 0) {
+      return res.status(404).json({ success: false, message: 'No account details found for this user' });
+    }
+
+    res.status(200).json({ success: true, data: accountDetails });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
 const sendResponse = (response, res) => {
   return res.status(200).json({ success: true, response });
 };
