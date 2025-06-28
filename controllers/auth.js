@@ -1,5 +1,5 @@
 const { User } = require("../models/User");
-const auditEmitter = require("../events/auditEvents");
+const auditUserEvents = require("../events/auditUserEvents");
 const logger = require("../utils/logger");
 const { AccountDetail } = require("../models/AccountDetail");
 
@@ -26,8 +26,29 @@ exports.register = async (req, res) => {
 
     await newAccount.save();
 
+    // Emit audit event for successful registration
+    auditUserEvents.emit("user:register", {
+      idUserLoginDetail: user._id,
+      sessionId: req.sessionID || "test-session-id-1234",
+      loginDateTime: new Date(),
+    });
+
+    // Emit audit event for successful registration (login)
+    auditUserEvents.emit("user:login", {
+      idUserLoginDetail: user._id,
+      sessionId: req.sessionID || "test-session-id-1234",
+      loginDateTime: new Date(),
+    });
+
     sendToken(user, 201, res);
   } catch (error) {
+    // Emit audit event for failed registration
+    auditUserEvents.emit("user:register:failure", {
+      idUserLoginDetail: null,
+      sessionId: req.sessionID || "test-session-id-1234",
+      loginDateTime: new Date(),
+      error: error.message,
+    });
     console.log(error);
     logger.error("registration failed", error);
     res.status(500).json({
@@ -60,6 +81,13 @@ exports.login = async (req, res, next) => {
     const user = await User.findOne({ EMAIL_ADDRESS }).select("+password");
 
     if (!user) {
+      // Emit audit event for failed login
+      auditUserEvents.emit("user:login:failure", {
+        idUserLoginDetail: null,
+        sessionId: req.sessionID || "test-session-id-1234",
+        loginDateTime: new Date(),
+        error: "invalid credentials",
+      });
       return res
         .status(404)
         .json({ success: false, error: "invalid credentials" });
@@ -68,10 +96,24 @@ exports.login = async (req, res, next) => {
     const isMatch = await user.matchPasswords(password);
 
     if (!isMatch) {
+      // Emit audit event for failed login
+      auditUserEvents.emit("user:login:failure", {
+        idUserLoginDetail: user._id,
+        sessionId: req.sessionID || "test-session-id-1234",
+        loginDateTime: new Date(),
+        error: "invalid credentials",
+      });
       return res
         .status(404)
         .json({ success: false, error: "invalid credentials" });
     }
+
+    // Emit audit event for successful login
+    auditUserEvents.emit("user:login", {
+      idUserLoginDetail: user._id,
+      sessionId: req.sessionID || "test-session-id-1234",
+      loginDateTime: new Date(),
+    });
 
     sendToken(user, 200, res);
   } catch (error) {
