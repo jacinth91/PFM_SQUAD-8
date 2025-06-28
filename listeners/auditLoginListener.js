@@ -1,6 +1,7 @@
 // listeners/auditLoginListener.js
 const auditUserEvents = require("../events/auditUserEvents");
 const AuditUserLogin = require("../models/AuditUserLogin");
+const AuditAction = require("../models/AuditAction");
 const { Queue, Worker } = require("bullmq");
 const IORedis = require("ioredis");
 const redisUrl = process.env.REDIS_URL || undefined;
@@ -15,6 +16,8 @@ const connection = redisUrl
 
 // Create a BullMQ queue for audit logs
 const auditLogQueue = new Queue("audit-log-queue", { connection });
+// Create a BullMQ queue for audit actions
+const auditActionQueue = new Queue("audit-action-queue", { connection });
 
 // Generic handler for user login events
 function handleUserLoginEvent(eventType, data) {
@@ -35,21 +38,6 @@ function handleUserLoginEvent(eventType, data) {
       loginDateTime: data.loginDateTime || new Date(),
       error: data.error,
     };
-  } else if (eventType === "user:register") {
-    jobData = {
-      ...jobData,
-      idUserLoginDetail: data.idUserLoginDetail,
-      loginStatus: "REGISTERED",
-      loginDateTime: data.loginDateTime || new Date(),
-    };
-  } else if (eventType === "user:register:failure") {
-    jobData = {
-      ...jobData,
-      idUserLoginDetail: data.idUserLoginDetail,
-      loginStatus: "REGISTER_FAILED",
-      loginDateTime: data.loginDateTime || new Date(),
-      error: data.error,
-    };
   } else if (eventType === "user:logout") {
     jobData = {
       ...jobData,
@@ -58,6 +46,35 @@ function handleUserLoginEvent(eventType, data) {
     };
   }
   auditLogQueue
+    .add(jobName, jobData)
+    .then(() => {
+      console.log(`[Producer] ✅ ${eventType} job queued`, jobData);
+    })
+    .catch((err) => {
+      console.error(`[Producer] ❌ Failed to queue ${eventType} job:`, err);
+    });
+}
+
+// Generic handler for user action events
+function handleUserActionEvent(eventType, data) {
+  let jobData = { sessionId: data.sessionId };
+  let jobName = eventType;
+  if (eventType === "user:action:start") {
+    jobData = {
+      ...jobData,
+      idUserLoginDetail: data.idUserLoginDetail,
+      userAction: data.userAction,
+      startDateTime: data.startDateTime || new Date(),
+    };
+  } else if (eventType === "user:action:end") {
+    jobData = {
+      ...jobData,
+      idUserLoginDetail: data.idUserLoginDetail,
+      userAction: data.userAction,
+      endDateTime: data.endDateTime || new Date(),
+    };
+  }
+  auditActionQueue
     .add(jobName, jobData)
     .then(() => {
       console.log(`[Producer] ✅ ${eventType} job queued`, jobData);
@@ -95,23 +112,24 @@ auditUserEvents.on("user:logout", (data) => {
   handleUserLoginEvent("user:logout", data);
 });
 
-auditUserEvents.on("user:register", (data) => {
-  if (!data.idUserLoginDetail || !data.sessionId) {
+auditUserEvents.on("user:action:start", (data) => {
+  if (!data.idUserLoginDetail || !data.userAction) {
     console.error(
-      "❌ Missing idUserLoginDetail or sessionId in register event data"
+      "❌ Missing idUserLoginDetail or userAction in action start event data"
     );
     return;
   }
-  handleUserLoginEvent("user:register", data);
+  handleUserActionEvent("user:action:start", data);
 });
 
-auditUserEvents.on("user:register:failure", (data) => {
-  // idUserLoginDetail may be null on failure
-  if (!data.sessionId) {
-    console.error("❌ Missing sessionId in register failure event data");
+auditUserEvents.on("user:action:end", (data) => {
+  if (!data.idUserLoginDetail || !data.userAction) {
+    console.error(
+      "❌ Missing idUserLoginDetail or userAction in action end event data"
+    );
     return;
   }
-  handleUserLoginEvent("user:register:failure", data);
+  handleUserActionEvent("user:action:end", data);
 });
 
 // Worker: Process jobs and write to DB
@@ -119,12 +137,7 @@ const auditLogWorker = new Worker(
   "audit-log-queue",
   async (job) => {
     console.log(`[Worker] Processing job: ${job.name}`, job.data);
-    if (
-      job.name === "user:login" ||
-      job.name === "user:login:failure" ||
-      job.name === "user:register" ||
-      job.name === "user:register:failure"
-    ) {
+    if (job.name === "user:login" || job.name === "user:login:failure") {
       const {
         idUserLoginDetail,
         sessionId,
@@ -165,6 +178,48 @@ const auditLogWorker = new Worker(
         }
       } catch (err) {
         console.error("[Worker] ❌ Failed to update logout audit:", err);
+      }
+    }
+  },
+  { connection }
+);
+
+// Worker: Process jobs and write to AUDIT_ACTION DB
+const auditActionWorker = new Worker(
+  "audit-action-queue",
+  async (job) => {
+    console.log(`[Worker] Processing job: ${job.name}`, job.data);
+    if (job.name === "user:action:start") {
+      const { idUserLoginDetail, userAction, startDateTime } = job.data;
+      try {
+        const audit = new AuditAction({
+          idUserLoginDetail,
+          userAction,
+          startDateTime,
+        });
+        await audit.save();
+        console.log(`[Worker] ✅ Audit action log saved for ${job.name}`);
+      } catch (err) {
+        console.error(
+          `[Worker] ❌ Failed to save audit action log for ${job.name}:`,
+          err
+        );
+      }
+    } else if (job.name === "user:action:end") {
+      const { idUserLoginDetail, userAction, endDateTime } = job.data;
+      try {
+        const updated = await AuditAction.findOneAndUpdate(
+          { idUserLoginDetail, userAction, endDateTime: null },
+          { endDateTime },
+          { new: true }
+        );
+        if (updated) {
+          console.log("[Worker] ✅ Action end time updated in DB");
+        } else {
+          console.warn("[Worker] ⚠️ No action record found to update end time");
+        }
+      } catch (err) {
+        console.error("[Worker] ❌ Failed to update action end time:", err);
       }
     }
   },
