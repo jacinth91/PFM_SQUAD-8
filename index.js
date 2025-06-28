@@ -22,6 +22,8 @@ connectDB();
 
 app.use("/api/private", require("./routes/private"));
 app.use("/api/auth", require("./routes/auth"));
+app.use("/api/products", require("./routes/products"));
+app.use("/api/transaction", require("./routes/transaction"));
 app.use('/api/orders', require("./routes/orders"));
 app.use('/api/account', require("./routes/account"));
 
