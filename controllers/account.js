@@ -34,7 +34,6 @@ exports.get = async (req, res) => {
 
     const accountDetails = await AccountDetail.find({ idUserLoginDetail: userId })
         .populate('idUserLoginDetail', 'EMAIL_ADDRESS FIRST_NAME LAST_NAME')
-        .populate('createdBy', 'EMAIL_ADDRESS')
         .populate('idOrderDetail');
 
     if (!accountDetails || accountDetails.length === 0) {
@@ -42,8 +41,6 @@ exports.get = async (req, res) => {
     }
 
     res.status(200).json({ success: true, data: accountDetails });
-
-    sendResponse("accounts profile added!", res)
   } catch (error) {
     console.log(error);
     res.status(500).json({
