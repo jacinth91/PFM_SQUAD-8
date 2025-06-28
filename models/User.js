@@ -5,6 +5,60 @@ const crypto = require("crypto");
 
 var options = { discriminatorKey: "type" };
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     UserModel:
+ *       type: object
+ *       required:
+ *         - EMAIL_ADDRESS
+ *         - password
+ *         - FIRST_NAME
+ *         - LAST_NAME
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: The auto-generated id of the user
+ *           example: 507f1f77bcf86cd799439011
+ *         EMAIL_ADDRESS:
+ *           type: string
+ *           format: email
+ *           description: User's email address (must be unique)
+ *           example: john.doe@example.com
+ *         password:
+ *           type: string
+ *           minLength: 6
+ *           description: User's hashed password (minimum 6 characters)
+ *           example: $2a$10$hashedpasswordstring
+ *         FIRST_NAME:
+ *           type: string
+ *           description: User's first name
+ *           example: John
+ *         LAST_NAME:
+ *           type: string
+ *           description: User's last name
+ *           example: Doe
+ *         CREATED_ON:
+ *           type: string
+ *           format: date-time
+ *           description: Date when the user was created
+ *           example: 2023-01-01T00:00:00.000Z
+ *         CREATED_BY:
+ *           type: string
+ *           description: User who created this record
+ *           example: system
+ *         MODIFIED_ON:
+ *           type: string
+ *           format: date-time
+ *           description: Date when the user was last modified
+ *           example: 2023-01-01T00:00:00.000Z
+ *         MODIFIED_BY:
+ *           type: string
+ *           description: User who last modified this record
+ *           example: john.doe@example.com
+ */
+
 const UserSchema = new mongoose.Schema(
   {
     EMAIL_ADDRESS: {
